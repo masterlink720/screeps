@@ -1,7 +1,6 @@
 /** @var {lodash|_} _ */
 
 
-
 const roles = {
     harvester: require('./role.harvester'),
     upgrader: require('./role.upgrader'),
@@ -13,10 +12,10 @@ const tools = require('./tools');
 const roleUtil = require('./role.util');
 
 const creepThresholds = {
-    harvester: 3,
-    builder: 1,
-    upgrader: 1,
-    generic: 6
+    harvester:  5,
+    builder:    5,
+    upgrader:   8,
+    generic:    10
 };
 
 /* @type TowerConfig[] */
@@ -34,25 +33,29 @@ module.exports.loop = function() {
     tools.cleanup();
 
     let allCreeps = {
-        harvester: _findCreeps('harvester'),
-        builder: _findCreeps('builder'),
-        upgrader: _findCreeps('upgrader'),
-        generic: _findCreeps('generic')
+        harvester:  _findCreeps('harvester'),
+        builder:    _findCreeps('builder'),
+        upgrader:   _findCreeps('upgrader'),
+        generic:    _findCreeps('generic')
     };
 
-    // Spawn creeps
-    // let incrementCreepConfigIndex = true;
-    _.each(['harvester', 'builder', 'upgrader', 'generic'], function(role) {
-        let creeps = allCreeps[role];
+    // Spawn creeps - skip if already spawning obviously
+    if( !spawn.spawning ) {
+        let minLevel = _.size(Game.creeps) >= 3 ? 1 : 0;
 
-        let newCreep;
-        while( creeps.length < creepThresholds[role] && (newCreep = roleUtil.spawn(spawn, role)) ) {
-            creeps.push(newCreep);
+        _.find(['harvester', 'upgrader', 'builder', 'generic'], function(role) {
+            if( allCreeps[role].length < creepThresholds[role] ) {
 
-            console.log(`New ${role} spawned: ${newCreep.name}`);
-        }
+                let newCreep = roleUtil.spawn(spawn, role, null, minLevel);
+                if( newCreep ) {
+                    console.log(`Spawning new ${role}: ${newCreep.name}`);
 
-    });
+                    allCreeps[role].push(newCreep);
+                    return newCreep;
+                }
+            }
+        });
+    }
 
     /*
      if( false && incrementCreepConfigIndex && creepConfigIndex < creepConfigs.length ) {
@@ -92,13 +95,16 @@ module.exports.loop = function() {
 
 
 // Create turret
-// Game.spawns.Spawn1.room.createConstructionSite( 23, 22, STRUCTURE_TOWER );
+// Game.spawns.s1.room.createConstructionSite( 23, 22, STRUCTURE_TOWER );
 
 // Create upgrader
-// Game.spawns.Spawn1.createCreep([WORK, WORK, MOVE], undefined, {role: 'upgrader'})
+// Game.spawns.s1.createCreep([WORK, WORK, MOVE], undefined, {role: 'upgrader'})
 
 // Clear all energy dropoff targets:
 // _.each(Game.creeps, (creep) => creep.memory.transferTargetId = null)
 
 // Clear all harvester sources
 // _.each(Game.creeps, (creep) => creep.memory.sourceId = null)
+
+// Build extension
+// Game.spawns.s1.room.createConstructionSite( 25, 31, STRUCTURE_EXTENSION );

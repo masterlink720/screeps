@@ -4,7 +4,7 @@ const roles = {
     harvester:  require('role.harvester'),
 };
 
-const rolesOrder = ['builder', 'upgrader', 'harvester'];
+const rolesOrder = ['upgrader', 'builder', 'harvester'];
 
 const roleUtil = require('role.util');
 
@@ -15,7 +15,7 @@ var roleGeneric = module.exports = {
 
         // Try in order
         let res = _.find(rolesOrder, function(role) {
-            
+
             // Don't re-try
             if( creep.memory.role === role ) {
                 return false;

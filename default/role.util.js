@@ -24,8 +24,8 @@ var roleUtil = module.exports = {
         let total = 0;
 
         _.each(Game.creeps, function(creep) {
-            if( creep && creep.memory && creep.memory.sourceId && creep.memory.sourceId == source.id ) {
-                total++;
+            if( creep && creep.memory && creep.memory.sourceId && creep.memory.sourceId === source.id ) {
+                ++total;
             }
         });
 
@@ -60,9 +60,7 @@ var roleUtil = module.exports = {
 
         // Fail
         if( !sources.length ) {
-            if( creep.memory.sourceId ) {
-                creep.memory.sourceId = null;
-            }
+            creep.memory.sourceId = null;
 
             console.log('[ERROR] Could not find any sources to gather');
             creep.say(':(_hungry');
@@ -78,35 +76,8 @@ var roleUtil = module.exports = {
 
         // Only one option
         if( !source ) {
-            if( sources.length === 1 ) {
-                source = sources[0];
-            }
-            else {
-
-                // First
-                if( !nextResourceId ) {
-                    source = sources[0];
-                    nextResourceId = sources[1].id;
-                }
-
-                else {
-                    source = _.find(sources, function(_source, i) {
-                        if( _source.id === nextResourceId ) {
-
-                            // Next id
-                            if( i >= sources.length - 1 ) {
-                                nextResourceId = null;
-                            }
-                            else {
-                                nextResourceId = sources[i + 1].id
-                                console.log(`Next source id: ${nextResourceId}`);
-                            }
-
-                            return true;
-                        }
-                    });
-                }
-            }
+            // Sort by creep count
+            source = _.sortBy(sources, (_source) => this.resourceCreeps(_source))[0];
         }
 
         if( !creep.memory.sourceId || creep.memory.sourceId !== source.id ) {
