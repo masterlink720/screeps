@@ -13,9 +13,9 @@ const roleUtil = require('./role.util');
 
 const creepThresholds = {
     harvester:  5,
-    builder:    5,
-    upgrader:   8,
-    generic:    10
+    builder:    10,
+    upgrader:   12,
+    generic:    2
 };
 
 /* @type TowerConfig[] */
@@ -41,7 +41,7 @@ module.exports.loop = function() {
 
     // Spawn creeps - skip if already spawning obviously
     if( !spawn.spawning ) {
-        let minLevel = _.size(Game.creeps) >= 3 ? 1 : 0;
+        let minLevel = spawn.room.controller.level - 2; // _.size(Game.creeps) >= 3 ? 1 : 0;
 
         _.find(['harvester', 'upgrader', 'builder', 'generic'], function(role) {
             if( allCreeps[role].length < creepThresholds[role] ) {
@@ -54,6 +54,8 @@ module.exports.loop = function() {
                     return newCreep;
                 }
             }
+
+            return false;
         });
     }
 

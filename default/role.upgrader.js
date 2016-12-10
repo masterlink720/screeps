@@ -7,7 +7,13 @@ var roleUpgrader = module.exports = {
 
         // Gathering
         if( roleUtil.getResources(creep) ) {
+            creep.memory.upgrading = null;
             return;
+        }
+
+        if( !creep.memory.upgrading ) {
+            creep.memory.upgrading = true;
+            creep.say('Upgrading');
         }
 
         if( creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE ) {
