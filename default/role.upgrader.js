@@ -6,7 +6,7 @@ var roleUpgrader = module.exports = {
     run: function(creep) {
 
         // Gathering
-        if( roleUtil.getResources(creep) ) {
+        if( roleUtil.getResources(creep, creep.room.controller) ) {
             creep.memory.upgrading = null;
             return;
         }

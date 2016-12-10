@@ -12,10 +12,10 @@ const tools = require('./tools');
 const roleUtil = require('./role.util');
 
 const creepThresholds = {
-    harvester:  5,
-    builder:    10,
+    harvester:  4,
+    builder:    6,
     upgrader:   12,
-    generic:    2
+    generic:    0
 };
 
 /* @type TowerConfig[] */
@@ -23,14 +23,20 @@ const towers = [{
     coords: [32, 37]
 }];
 
-const spawn = Game.spawns[Object.keys(Game.spawns)[0]];
-
 function _findCreeps(role) {
     return _.filter(Game.creeps, (creep) => creep.memory.role === role);
 }
 
 module.exports.loop = function() {
+    let spawn               = Game.spawns[Object.keys(Game.spawns)[0]],
+        totalEnergyCapacity = spawn.energyCapacity;
+
     tools.cleanup();
+
+    // Figure out the absolute total energy capacity
+    _.each(spawn.room.find(FIND_MY_STRUCTURES, {filter: (struct) => struct.structureType === STRUCTURE_EXTENSION}), function(ext) {
+        totalEnergyCapacity += ext.energyCapacity;
+    });
 
     let allCreeps = {
         harvester:  _findCreeps('harvester'),
@@ -41,7 +47,7 @@ module.exports.loop = function() {
 
     // Spawn creeps - skip if already spawning obviously
     if( !spawn.spawning ) {
-        let minLevel = spawn.room.controller.level - 2; // _.size(Game.creeps) >= 3 ? 1 : 0;
+        let minLevel = ~~((totalEnergyCapacity - 300) / 100);
 
         _.find(['harvester', 'upgrader', 'builder', 'generic'], function(role) {
             if( allCreeps[role].length < creepThresholds[role] ) {

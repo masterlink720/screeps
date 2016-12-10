@@ -4,7 +4,9 @@ const targetsOrder = [
     STRUCTURE_TOWER,
     STRUCTURE_SPAWN,
     STRUCTURE_EXTENSION,
-    STRUCTURE_STORAGE
+    STRUCTURE_STORAGE,
+    STRUCTURE_WALL,
+    STRUCTURE_ROAD,
 ];
 
 var roleBuilder = module.exports = {
@@ -47,7 +49,7 @@ var roleBuilder = module.exports = {
         }
 
         // Could not find one in our list of priorities - use whatever else we can find
-        target = target || target;
+        target = target || targets[0];
 
         // New target
         if (!creep.memory.buildTargetId || creep.memory.buildTargetId !== target.id) {

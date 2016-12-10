@@ -6,8 +6,8 @@ var nextResourceId = null;
 const roleLevels = {
     generic: [
         [WORK, CARRY, MOVE],
-        [WORK, CARRY, MOVE, MOVE],
-        [WORK, WORK, CARRY, MOVE, MOVE],
+        [WORK, CARRY, CARRY, MOVE],
+        [WORK, WORK, CARRY, CARRY, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
         [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, TOUGH]
     ]
@@ -36,10 +36,11 @@ var roleUtil = module.exports = {
      * Gather resources if necessary
      *
      * @param {Creep} creep
+     * @param {*} closestTo
      *
      * @return {boolean} true: needs to gather, false: done gathering
      */
-    getResources: function(creep) {
+    getResources: function(creep, closestTo = null) {
 
         // Already carrying.. continue ONLY if not mining anymore
         if( creep.carry && creep.carry.energy ) {
@@ -74,10 +75,13 @@ var roleUtil = module.exports = {
             source = _.find(sources, (_source) => _source.id === creep.memory.sourceId);
         }
 
-        // Only one option
         if( !source ) {
-            // Sort by creep count
-            source = _.sortBy(sources, (_source) => this.resourceCreeps(_source))[0];
+            // try finding the closest - unless if 5 or more are using or waiting
+            source = (closestTo || creep).pos.findClosestByPath(FIND_SOURCES);
+            if( !source || this.resourceCreeps(source) > 5 ) {
+                // Sort by creep count
+                source = _.sortBy(sources, (_source) => this.resourceCreeps(_source))[0];
+            }
         }
 
         if( !creep.memory.sourceId || creep.memory.sourceId !== source.id ) {
