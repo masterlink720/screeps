@@ -1,4 +1,4 @@
-const roleUtil = require('role.util');
+const roleUtil = require('./role.util');
 
 var roleUpgrader = module.exports = {
 

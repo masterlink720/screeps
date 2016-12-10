@@ -1,11 +1,23 @@
 var nextResourceId = null;
 
+/**
+ * In reverse order, the body components for each level based on a creep role
+ */
+const roleLevels = {
+    generic: [
+        [WORK, CARRY, MOVE],
+        [WORK, CARRY, MOVE, MOVE],
+        [WORK, WORK, CARRY, MOVE, MOVE],
+        [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
+        [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, TOUGH]
+    ]
+};
 
 var roleUtil = module.exports = {
 
     /**
      * Returns the number of creeps currently mining a resource
-     * 
+     *
      * @return {number}
      */
     resourceCreeps: function(source) {
@@ -22,9 +34,9 @@ var roleUtil = module.exports = {
 
     /**
      * Gather resources if necessary
-     * 
-     * @param {Creep} creep 
-     * 
+     *
+     * @param {Creep} creep
+     *
      * @return {boolean} true: needs to gather, false: done gathering
      */
     getResources: function(creep) {
@@ -45,7 +57,7 @@ var roleUtil = module.exports = {
 
         let sources     = creep.room.find(FIND_SOURCES),
             source      = null;
-            
+
         // Fail
         if( !sources.length ) {
             if( creep.memory.sourceId ) {
@@ -70,17 +82,17 @@ var roleUtil = module.exports = {
                 source = sources[0];
             }
             else {
-    
+
                 // First
                 if( !nextResourceId ) {
                     source = sources[0];
                     nextResourceId = sources[1].id;
                 }
-    
+
                 else {
                     source = _.find(sources, function(_source, i) {
                         if( _source.id === nextResourceId ) {
-                            
+
                             // Next id
                             if( i >= sources.length - 1 ) {
                                 nextResourceId = null;
@@ -89,7 +101,7 @@ var roleUtil = module.exports = {
                                 nextResourceId = sources[i + 1].id
                                 console.log(`Next source id: ${nextResourceId}`);
                             }
-    
+
                             return true;
                         }
                     });
@@ -109,8 +121,25 @@ var roleUtil = module.exports = {
         return true;
     },
 
-    moveOutOfTheWay(creep) {
+    moveOutOfTheWay: function(creep) {
         creep.moveTo(10, 10);
+    },
+
+    spawn: function(spawn, role, name = null, minLevel = 0) {
+        let confs = roleLevels.generic;
+
+        if( roleLevels.hasOwnProperty(role) ) {
+            confs = roleLevels[role];
+        }
+
+        for(let level = confs.length - 1; level >= minLevel; level--) {
+            if( spawn.canCreateCreep(confs[level]) === 0 ) {
+                let newName = spawn.createCreep(confs[level], name, {role: role, level: level});
+                return Game.creeps[newName];
+            }
+        }
+
+        return false;
     }
 
 }

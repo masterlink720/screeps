@@ -1,27 +1,22 @@
+/** @var {lodash|_} _ */
+
+
+
 const roles = {
-    harvester: require('role.harvester'),
-    upgrader: require('role.upgrader'),
-    builder: require('role.builder'),
-    generic: require('role.generic')
+    harvester: require('./role.harvester'),
+    upgrader: require('./role.upgrader'),
+    builder: require('./role.builder'),
+    generic: require('./role.generic')
 };
 
-const creepConfigs = [
-    // [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
-    // [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-    [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
-    [WORK, WORK, CARRY, MOVE, MOVE],
-    [WORK, CARRY, MOVE, MOVE]
-];
-
-var creepConfigIndex = 0;
-
-const tools = require('tools');
+const tools = require('./tools');
+const roleUtil = require('./role.util');
 
 const creepThresholds = {
     harvester: 3,
     builder: 1,
     upgrader: 1,
-    generic: 8
+    generic: 6
 };
 
 /* @type TowerConfig[] */
@@ -50,23 +45,11 @@ module.exports.loop = function() {
     _.each(['harvester', 'builder', 'upgrader', 'generic'], function(role) {
         let creeps = allCreeps[role];
 
-        if (creeps.length < creepThresholds[role]) {
+        let newCreep;
+        while( creeps.length < creepThresholds[role] && (newCreep = roleUtil.spawn(spawn, role)) ) {
+            creeps.push(newCreep);
 
-            // Attempt to make the largest possible creep
-            let creepName = _.find(creepConfigs, function(conf, i) {
-                let newName = spawn.createCreep(conf, undefined, { role: role, roleIndex: i });
-                if (newName < 0) {
-                    return false;
-                }
-
-                return newName;
-            });
-
-            if (creepName) {
-                // console.debug(`Spawning new ${role} (${creepName})`);
-            } else {
-                // console.log(`Not enough energy to spawn new ${role}`);
-            }
+            console.log(`New ${role} spawned: ${newCreep.name}`);
         }
 
     });
@@ -115,7 +98,7 @@ module.exports.loop = function() {
 // Game.spawns.Spawn1.createCreep([WORK, WORK, MOVE], undefined, {role: 'upgrader'})
 
 // Clear all energy dropoff targets:
-// _.each(Game.creeps, (creep) => creep.memory.transferId = null)
+// _.each(Game.creeps, (creep) => creep.memory.transferTargetId = null)
 
 // Clear all harvester sources
 // _.each(Game.creeps, (creep) => creep.memory.sourceId = null)
