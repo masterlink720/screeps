@@ -72,10 +72,10 @@ module.exports.loop = function() {
     });
 
     /*
-    if( false && incrementCreepConfigIndex && creepConfigIndex < creepConfigs.length ) {
-        creepConfigIndex++;
-    }
-    */
+     if( false && incrementCreepConfigIndex && creepConfigIndex < creepConfigs.length ) {
+     creepConfigIndex++;
+     }
+     */
 
     // TODO upgrade creeps
 
@@ -89,21 +89,21 @@ module.exports.loop = function() {
     });
 
     /*
-    let tower = Game.getObjectById('f9c4e0babc76c9ed0244b94a');
-    if(tower) {
-        let foe     = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
-            friend  = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (structure) => structure.hits < structure.hitsMax
-            });
+     let tower = Game.getObjectById('f9c4e0babc76c9ed0244b94a');
+     if(tower) {
+     let foe     = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
+     friend  = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+     filter: (structure) => structure.hits < structure.hitsMax
+     });
 
-        if( friend ) {
-            tower.repair(friend);
-        }
+     if( friend ) {
+     tower.repair(friend);
+     }
 
-        if( foe ) {
-            tower.attack(foe);
-        }
-    }*/
+     if( foe ) {
+     tower.attack(foe);
+     }
+     }*/
 };
 
 
