@@ -2,26 +2,31 @@
 
 
 const roles = {
-    harvester: require('./role.harvester'),
-    upgrader: require('./role.upgrader'),
-    builder: require('./role.builder'),
-    generic: require('./role.generic')
+    harvester:  require('./role.harvester'),
+    upgrader:   require('./role.upgrader'),
+    builder:    require('./role.builder'),
+    repairer:   require('./role.repairer'),
+    waller:     require('./role.waller'),
+    generic:    require('./role.generic'),
+    tower:      require('./tower')
 };
 
-const tools = require('./tools');
-const roleUtil = require('./role.util');
+const tools     = require('./tools');
+const roleUtil  = require('./role.util');
 
 const creepThresholds = {
-    harvester:  4,
-    builder:    6,
-    upgrader:   12,
+    harvester:  6,
+    builder:    5,
+    repairer:   3,
+    waller:     2,
+    upgrader:   5,
     generic:    0
 };
 
 /* @type TowerConfig[] */
-const towers = [{
+/*const towers = [{
     coords: [32, 37]
-}];
+}];*/
 
 function _findCreeps(role) {
     return _.filter(Game.creeps, (creep) => creep.memory.role === role);
@@ -42,14 +47,21 @@ module.exports.loop = function() {
         harvester:  _findCreeps('harvester'),
         builder:    _findCreeps('builder'),
         upgrader:   _findCreeps('upgrader'),
+        repairer:   _findCreeps('repairer'),
+        waller:     _findCreeps('waller'),
         generic:    _findCreeps('generic')
     };
 
     // Spawn creeps - skip if already spawning obviously
     if( !spawn.spawning ) {
-        let minLevel = ~~((totalEnergyCapacity - 300) / 100);
+        let minLevel = 4; // ~~((totalEnergyCapacity - 300) / 100);
+        
+        // No Harvesters and no builders - reduce minLevel to 1
+        if( !allCreeps.harvester.length || !allCreeps.upgrader.length ) {
+            minLevel = 0;
+        }
 
-        _.find(['harvester', 'upgrader', 'builder', 'generic'], function(role) {
+        _.find(['harvester', 'upgrader', 'repairer', 'builder', 'waller', 'generic'], function(role) {
             if( allCreeps[role].length < creepThresholds[role] ) {
 
                 let newCreep = roleUtil.spawn(spawn, role, null, minLevel);
@@ -82,22 +94,15 @@ module.exports.loop = function() {
         }
     });
 
-    /*
-     let tower = Game.getObjectById('f9c4e0babc76c9ed0244b94a');
-     if(tower) {
-     let foe     = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
-     friend  = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-     filter: (structure) => structure.hits < structure.hitsMax
-     });
+    // Towers
+    let towers = spawn.room.find(FIND_MY_STRUCTURES, {
+        filter: (struct) => struct.structureType === STRUCTURE_TOWER
+    });
 
-     if( friend ) {
-     tower.repair(friend);
-     }
+    _.each(towers, function(tower) {
+        roles.tower.run(tower);
+    });
 
-     if( foe ) {
-     tower.attack(foe);
-     }
-     }*/
 };
 
 

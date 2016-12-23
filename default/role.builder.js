@@ -2,11 +2,13 @@ const roleUtil = require('role.util');
 
 const targetsOrder = [
     STRUCTURE_TOWER,
-    STRUCTURE_SPAWN,
     STRUCTURE_EXTENSION,
-    STRUCTURE_STORAGE,
-    STRUCTURE_WALL,
+    STRUCTURE_RAMPART,
     STRUCTURE_ROAD,
+    STRUCTURE_CONTAINER,
+    STRUCTURE_WALL,
+    STRUCTURE_STORAGE,
+    STRUCTURE_LAB,
 ];
 
 var roleBuilder = module.exports = {
@@ -16,10 +18,7 @@ var roleBuilder = module.exports = {
 
         // Gathering
         if( roleUtil.getResources(creep) ) {
-            // Had previous build targets
-            if( creep.memory.buildTargetId ) {
-                creep.memory.buildTargetId = null;
-            }
+            creep.memory.buildTargetId = null;
 
             return;
         }

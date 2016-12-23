@@ -1,6 +1,10 @@
 const targetsOrder = [
+    STRUCTURE_EXTENSION,
     STRUCTURE_SPAWN,
-    STRUCTURE_EXTENSION
+    STRUCTURE_TOWER,
+    STRUCTURE_LAB,
+    STRUCTURE_CONTAINER,
+    STRUCTURE_STORAGE,
 ];
 
 const roleUtil = require('./role.util');
@@ -11,7 +15,7 @@ var roleHarvester = module.exports = {
     run: function(creep) {
 
         // Gathering
-        if (roleUtil.getResources(creep) === true) {
+        if (roleUtil.getResources(creep) ) {
 
             // Previous had a dropoff target
             if (creep.memory.transferTargetId) {
@@ -25,7 +29,7 @@ var roleHarvester = module.exports = {
 
             // Filter out those with full energy
             targets = creep.room.find(FIND_MY_STRUCTURES, {
-                filter: (struct) => struct.hasOwnProperty('energy') && struct.energy < struct.energyCapacity
+                filter: (struct) => _.includes(targetsOrder, struct.structureType) && struct.energy < struct.energyCapacity
             });
 
         // Fail
@@ -49,14 +53,14 @@ var roleHarvester = module.exports = {
         }
 
         // Blah just find the closest one period
-        target = target || creep.pos.findClosestByPath(targets);
+        target = target || creep.pos.findClosestByPath(targets) || targets[0];
 
         // New target
         if (!creep.memory.transferTargetId || creep.memory.transferTargetId !== target.id) {
             creep.memory.transferTargetId = target.id;
 
             console.log('Sending energy to ' + target);
-            creep.say('Transfer.' + target.name);
+            creep.say('Transfer.' + target);
         }
 
         if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {

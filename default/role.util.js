@@ -1,5 +1,10 @@
 var nextResourceId = null;
 
+const resourceSources = [
+    STRUCTURE_CONTAINER,
+    STRUCTURE_STORAGE
+];
+
 /**
  * In reverse order, the body components for each level based on a creep role
  */
@@ -7,9 +12,11 @@ const roleLevels = {
     generic: [
         [WORK, CARRY, MOVE],
         [WORK, CARRY, CARRY, MOVE],
-        [WORK, WORK, CARRY, CARRY, MOVE],
+        [WORK, CARRY, CARRY, MOVE, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
-        [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, TOUGH]
+        [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
+        [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+        [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE]
     ]
 };
 
@@ -37,10 +44,11 @@ var roleUtil = module.exports = {
      *
      * @param {Creep} creep
      * @param {*} closestTo
+     * @param {boolean} harvester
      *
      * @return {boolean} true: needs to gather, false: done gathering
      */
-    getResources: function(creep, closestTo = null) {
+    getResources: function(creep, closestTo = null, harvester = false) {
 
         // Already carrying.. continue ONLY if not mining anymore
         if( creep.carry && creep.carry.energy ) {
@@ -49,7 +57,7 @@ var roleUtil = module.exports = {
             if( ! creep.memory.sourceId || creep.carry.energy >= creep.carryCapacity ) {
                 // Just finished
                 if( creep.memory.sourceId ) {
-                    creep.say('Gather.done');
+                    // creep.say('Gather.done');
                     creep.memory.sourceId = null;
                 }
                 return false;
@@ -58,6 +66,13 @@ var roleUtil = module.exports = {
 
         let sources     = creep.room.find(FIND_SOURCES),
             source      = null;
+
+        // If not a harvester, also consider storage and containers
+        if( creep.memory.role !== 'harvester' ) {
+            sources = creep.room.find(FIND_MY_STRUCTURES, {filter: struct =>
+                _.includes(resourceSources, struct.structureType) && struct.energy > 0
+            }).concat(sources);
+        }
 
         // Fail
         if( !sources.length ) {
@@ -77,8 +92,8 @@ var roleUtil = module.exports = {
 
         if( !source ) {
             // try finding the closest - unless if 5 or more are using or waiting
-            source = (closestTo || creep).pos.findClosestByPath(FIND_SOURCES);
-            if( !source || this.resourceCreeps(source) > 5 ) {
+            source = (closestTo || creep).pos.findClosestByPath(sources);
+            if( !source || this.resourceCreeps(source) > 4 ) {
                 // Sort by creep count
                 source = _.sortBy(sources, (_source) => this.resourceCreeps(_source))[0];
             }
@@ -94,6 +109,18 @@ var roleUtil = module.exports = {
         }
 
         return true;
+    },
+
+    /**
+     * Attempts to withdraw resources from the nearest container or storage
+     * 
+     * Returns false if unable
+     */
+    withdrawResources: function(creep) {
+        // Harvester - don't even try
+        if( creep.memory.role === 'harvester' ) {
+            return false;
+        }
     },
 
     moveOutOfTheWay: function(creep) {
