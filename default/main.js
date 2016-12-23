@@ -11,22 +11,18 @@ const roles = {
     tower:      require('./tower')
 };
 
-const tools     = require('./tools');
-const roleUtil  = require('./role.util');
+const tools     = global.tools = require('./tools');
+const roleUtil  = global.roleUtil = require('./role.util');
 
 const creepThresholds = {
     harvester:  6,
     builder:    5,
     repairer:   3,
     waller:     2,
-    upgrader:   5,
+    upgrader:   6,
     generic:    0
 };
 
-/* @type TowerConfig[] */
-/*const towers = [{
-    coords: [32, 37]
-}];*/
 
 function _findCreeps(role) {
     return _.filter(Game.creeps, (creep) => creep.memory.role === role);
@@ -38,37 +34,48 @@ module.exports.loop = function() {
 
     tools.cleanup();
 
+    let allCreeps = {
+            harvester:  tools.getCreeps(spawn.room, 'harvester', true),
+            builder:    tools.getCreeps(spawn.room, 'builder'),
+            upgrader:   tools.getCreeps(spawn.room, 'upgrader'),
+            repairer:   tools.getCreeps(spawn.room, 'repairer'),
+            waller:     tools.getCreeps(spawn.room, 'waller'),
+            generic:    tools.getCreeps(spawn.room, 'generic'),
+        },
+        allStructs = tools.getStructures(spawn.room, null, true);
+
+
     // Figure out the absolute total energy capacity
-    _.each(spawn.room.find(FIND_MY_STRUCTURES, {filter: (struct) => struct.structureType === STRUCTURE_EXTENSION}), function(ext) {
+    _.each( _.filter(allStructs, (struct) => struct.structureType === STRUCTURE_EXTENSION), function(ext) {
         totalEnergyCapacity += ext.energyCapacity;
     });
 
-    let allCreeps = {
-        harvester:  _findCreeps('harvester'),
-        builder:    _findCreeps('builder'),
-        upgrader:   _findCreeps('upgrader'),
-        repairer:   _findCreeps('repairer'),
-        waller:     _findCreeps('waller'),
-        generic:    _findCreeps('generic')
-    };
-
     // Spawn creeps - skip if already spawning obviously
     if( !spawn.spawning ) {
-        let minLevel = 4; // ~~((totalEnergyCapacity - 300) / 100);
-        
+        let minLevel = 1; // ~~((totalEnergyCapacity - 300) / 100);
+
         // No Harvesters and no builders - reduce minLevel to 1
         if( !allCreeps.harvester.length || !allCreeps.upgrader.length ) {
             minLevel = 0;
         }
 
         _.find(['harvester', 'upgrader', 'repairer', 'builder', 'waller', 'generic'], function(role) {
-            if( allCreeps[role].length < creepThresholds[role] ) {
+            // Skip if we don't need this type of creep or if we've reached the spawn limit
+            if( allCreeps[role].length < creepThresholds[role] && roles[role].spawn(spawn) ) {
 
-                let newCreep = roleUtil.spawn(spawn, role, null, minLevel);
+                let nextId = spawn.memory.nextCreepId || 0,
+                    name = role[0].toUpperCase() + role.slice(1) + ' - ' + nextId;
+
+                let newCreep = roleUtil.spawn(spawn, role, name, minLevel);
                 if( newCreep ) {
                     console.log(`Spawning new ${role}: ${newCreep.name}`);
 
                     allCreeps[role].push(newCreep);
+
+                    // Reset at 999
+                    if( (spawn.memory.nextCreepId = nextId + 1) >= 9999 ) {
+                        spawn.memory.nextCreepId = 0;
+                    }
                     return newCreep;
                 }
             }
@@ -95,10 +102,7 @@ module.exports.loop = function() {
     });
 
     // Towers
-    let towers = spawn.room.find(FIND_MY_STRUCTURES, {
-        filter: (struct) => struct.structureType === STRUCTURE_TOWER
-    });
-
+    let towers = _.filter(allStructs, (struct) => struct.stuctureType === STRUCTURE_TOWER);
     _.each(towers, function(tower) {
         roles.tower.run(tower);
     });

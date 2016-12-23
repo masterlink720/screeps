@@ -20,5 +20,13 @@ var roleUpgrader = module.exports = {
             creep.moveTo(creep.room.controller);
         }
 
-	}
+	},
+
+    /**
+     * We always need upgraders
+     * @returns {boolean}
+     */
+    spawn: function() {
+        return true;
+    }
 };

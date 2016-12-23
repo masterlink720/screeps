@@ -1,4 +1,5 @@
-const roleUtil = require('role.util');
+const roleUtil = require('./role.util');
+const tools    = require('./tools');
 
 const targetsOrder = [
     STRUCTURE_TOWER,
@@ -62,5 +63,18 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+    },
+
+    /**
+     * Spawns a new builder if needed
+     *
+     * Just returns true/false, indicating whether or not spawns are needed
+     *
+     * @return {boolean}
+     */
+    spawn: function(spawn) {
+
+        // Spawn only if there are construction sites to be worked on
+        return spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0;
     }
 };

@@ -8,6 +8,7 @@ const targetsOrder = [
 ];
 
 const roleUtil = require('./role.util');
+const tools    = require('./tools');
 
 var roleHarvester = module.exports = {
 
@@ -28,9 +29,9 @@ var roleHarvester = module.exports = {
         let target = null,
 
             // Filter out those with full energy
-            targets = creep.room.find(FIND_MY_STRUCTURES, {
-                filter: (struct) => _.includes(targetsOrder, struct.structureType) && struct.energy < struct.energyCapacity
-            });
+            targets = tools.getStructures(creep.room,
+                struct => _.includes(targetsOrder, struct.structureType) && struct.energy < struct.energyCapacity
+            );
 
         // Fail
         if( !targets.length ) {
@@ -67,5 +68,13 @@ var roleHarvester = module.exports = {
             creep.moveTo(target);
         }
 
+    },
+
+    /**
+     * We always need harvesters
+     * @returns {boolean}
+     */
+    spawn: function() {
+        return true;
     }
 };

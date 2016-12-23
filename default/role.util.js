@@ -1,4 +1,3 @@
-var nextResourceId = null;
 
 const resourceSources = [
     STRUCTURE_CONTAINER,
@@ -55,11 +54,7 @@ var roleUtil = module.exports = {
 
             // Done mining
             if( ! creep.memory.sourceId || creep.carry.energy >= creep.carryCapacity ) {
-                // Just finished
-                if( creep.memory.sourceId ) {
-                    // creep.say('Gather.done');
-                    creep.memory.sourceId = null;
-                }
+                creep.memory.sourceId = null;
                 return false;
             }
         }
@@ -68,11 +63,12 @@ var roleUtil = module.exports = {
             source      = null;
 
         // If not a harvester, also consider storage and containers
+        ///*
         if( creep.memory.role !== 'harvester' ) {
             sources = creep.room.find(FIND_MY_STRUCTURES, {filter: struct =>
                 _.includes(resourceSources, struct.structureType) && struct.energy > 0
             }).concat(sources);
-        }
+        }//*/
 
         // Fail
         if( !sources.length ) {
@@ -113,7 +109,7 @@ var roleUtil = module.exports = {
 
     /**
      * Attempts to withdraw resources from the nearest container or storage
-     * 
+     *
      * Returns false if unable
      */
     withdrawResources: function(creep) {

@@ -1,4 +1,5 @@
 const roleUtil = require('./role.util');
+const tools    = require('./tools');
 
 
 var roleBuilder = module.exports = {
@@ -14,9 +15,9 @@ var roleBuilder = module.exports = {
         }
 
         let target = null,
-            targets = creep.room.find(FIND_STRUCTURES, {
-                filter: (_struct) => _struct.hits < _struct.hitsMax && (_struct.structureType === STRUCTURE_WALL || _struct.structureType === STRUCTURE_RAMPART)
-            });
+            targets = tools.getStructures(creep.room,
+                _struct => _struct.hits < _struct.hitsMax && (_struct.structureType === STRUCTURE_WALL || _struct.structureType === STRUCTURE_RAMPART)
+            );
 
         // Derp
         if( !targets.length ) {
@@ -51,5 +52,14 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+    },
+
+    /**
+     * Only spawn if we have walls to build
+     */
+    spawn: function(spawn) {
+        return spawn.room.find(FIND_STRUCTURES, {
+            filter: struct => struct.structureType === STRUCTURE_WALL
+        }).length > 0;
     }
 };

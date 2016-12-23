@@ -3,8 +3,10 @@ const repairTargets = [
     STRUCTURE_EXTENSION,
 ];
 
+const tools = require('./tools');
+
 var Tower = module.exports = {
-    
+
     /** @param {TowerConfig} tower */
     run: function(tower) {
         // Can't do anything
@@ -13,9 +15,9 @@ var Tower = module.exports = {
         }
 
         let foe = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
-            friend = tower.pos.findClosestByRange(FIND_STRUCTURES, {filter:
+            friend = tower.pos.findClosestByRange(tools.getStructures(tower.room),
                 struct => _.includes(repairTargets, struct.structureType) && struct.hits < struct.hitsMax
-            });
+            );
 
         if( foe ) {
             tower.attack(foe);
@@ -26,7 +28,7 @@ var Tower = module.exports = {
             tower.repair(friend);
         }
     }
-    
+
 };
 
 /*
@@ -49,6 +51,6 @@ var Tower = module.exports = {
 /**
  * @namespace TowerConfig
  * @type {object}
- * 
+ *
  * @property {number[]} coords
  */

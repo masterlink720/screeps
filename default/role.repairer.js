@@ -10,6 +10,8 @@ const targetsOrder = [
     STRUCTURE_WALL,
 ];
 
+const tools    = require('./tools');
+
 var roleBuilder = module.exports = {
 
     /** @param {Creep} creep **/
@@ -17,18 +19,13 @@ var roleBuilder = module.exports = {
 
         // Gathering
         if( roleUtil.getResources(creep) ) {
-            // Had previous build targets
-            if( creep.memory.repairTargetId ) {
-                creep.memory.repairTargetId = null;
-            }
+            creep.memory.repairTargetId = null;
 
             return;
         }
 
         let target = null,
-            targets = creep.room.find(FIND_STRUCTURES, {
-                filter: (_struct) => _struct.hits < _struct.hitsMax
-            });
+            targets = tools.getStructures(creep.room, struct => struct.hits < struct.hitsMax);
 
         // console.log(`repair targets: ${targets}`);
 
@@ -85,5 +82,16 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+    },
+
+    /**
+     * Only if we have roads or containers to maintain
+     * @param spawn
+     */
+    spawn: function(spawn) {
+
+        return tools.getStructures(spawn.room, (struct) =>
+            struct.structureType === STRUCTURE_ROAD || struct.structureType === STRUCTURE_CONTAINER)
+            .length > 0;
     }
 };

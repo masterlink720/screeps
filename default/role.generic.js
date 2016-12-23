@@ -1,21 +1,23 @@
 const roles = {
     builder:    require('./role.builder'),
-    upgrader:   require('./role.upgrader'),
-    harvester:  require('./role.harvester'),
     repairer:   require('./role.repairer'),
+    harvester:  require('./role.harvester'),
+    upgrader:   require('./role.upgrader'),
+    waller:     require('./role.waller'),
+
 };
 
 const rolesOrder = ['builder', 'repairer', 'harvester', 'waller', 'upgrader'];
 
-const roleUtil = require('role.util');
+const roleUtil = require('./role.util');
 
 var roleGeneric = module.exports = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-        
+
         // Ensure at least one creep is upgrading
-        if( !_.find(Game.creeps, (_creep) => _creep.memory.upgrading) ) {
+        if( !_.find(Game.creeps, _creep => _creep.memory.upgrading) ) {
             if( roles.upgrader.run(creep) ) {
                 return;
             }
@@ -36,5 +38,12 @@ var roleGeneric = module.exports = {
             creep.say('Nothing to do.....');
             creep.moveTo(0, 0);
         }
+    },
+
+    /**
+     * Always spawn generic
+     */
+    spawn: function() {
+        return true;
     }
 };
