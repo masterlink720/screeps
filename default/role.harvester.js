@@ -1,9 +1,9 @@
 const targetsOrder = [
     STRUCTURE_EXTENSION,
-    STRUCTURE_SPAWN,
     STRUCTURE_TOWER,
-    STRUCTURE_LAB,
     STRUCTURE_CONTAINER,
+    STRUCTURE_SPAWN,
+    STRUCTURE_LAB,
     STRUCTURE_STORAGE,
 ];
 
@@ -12,16 +12,34 @@ const tools    = require('./tools');
 
 var roleHarvester = module.exports = {
 
+    levels: [
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 1, move: 2},
+        {work: 1, carry: 2, move: 2},
+        {work: 1, carry: 3, move: 2},
+        {work: 2, carry: 3, move: 2},
+        {work: 2, carry: 3, move: 3},
+        {work: 3, carry: 4, move: 3}
+    ],
+
     /** @param {Creep} creep **/
     run: function(creep) {
 
         // Gathering
         if (roleUtil.getResources(creep) ) {
-
             // Previous had a dropoff target
-            if (creep.memory.transferTargetId) {
-                creep.memory.transferTargetId = null;
-            }
+            creep.memory.transferTargetId = null;
+
+            // If we can, despoit energy directly into nearby container
+            // TODO conditionally allow this, but don't allow it to prevent
+            // spawns and extensions from getting energy
+            /*
+            if( creep.carry.energy ) {
+                let target = this.findAdjacentTarget(creep);
+                if( target ) {
+                    creep.transfer(target, RESOURCE_ENERGY);
+                }
+            }*/
 
             return;
         }
@@ -29,9 +47,13 @@ var roleHarvester = module.exports = {
         let target = null,
 
             // Filter out those with full energy
-            targets = tools.getStructures(creep.room,
-                struct => _.includes(targetsOrder, struct.structureType) && struct.energy < struct.energyCapacity
-            );
+            targets = tools.getStructures(creep.room, function(struct) {
+                if( ! _.includes(targetsOrder, struct.structureType) ) {
+                    return false;
+                }
+
+                return struct.store < struct.storeCapacity || struct.energy < struct.energyCapacity;
+            });
 
         // Fail
         if( !targets.length ) {
@@ -41,14 +63,16 @@ var roleHarvester = module.exports = {
 
         // Already has a transfer target
         if (creep.memory.transferTargetId) {
-            target = _.find(targets, (_target) => _target.id === creep.memory.transferTargetId);
+            target = _.find(targets, _target => _target.id === creep.memory.transferTargetId);
         }
 
         if (!target) {
             // Try finding the closest structure, in order of priority
             _.each(targetsOrder, function(targetType) {
+                if( target ) return;
+
                 target = target || creep.pos.findClosestByPath(
-                    _.filter(targets, (_target) => _target.structureType === targetType)
+                    _.filter(targets, _target => _target.structureType === targetType)
                 );
             });
         }
@@ -60,14 +84,40 @@ var roleHarvester = module.exports = {
         if (!creep.memory.transferTargetId || creep.memory.transferTargetId !== target.id) {
             creep.memory.transferTargetId = target.id;
 
-            console.log('Sending energy to ' + target);
+            console.log('Depositing energy to ' + target);
             creep.say('Transfer.' + target);
         }
 
         if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
             creep.moveTo(target);
         }
+        else if( !creep.carry.energy ) {
+                return this.run(creep);
+        }
+        else if( target.energy >= target.energyCapacity ||target.store >= target.storeCapacity ) {
+            return this.run(creep);
+        }
 
+        // Done transfering - run again
+/*
+        else if(!creep.carry.energy ||
+            (target.energyCapacity && (target.energy >= target.energyCapacity)) ||
+            (target.energyCapacity && (target.store >= target.storeCapacity))) {
+            return this.run(creep);
+        }*/
+    },
+
+    /**
+     * Attempts to find any container or storage targets that are immediately adjacent
+     *  to the given creep
+     */
+    findAdjacentTarget: function(creep) {
+        let targets = tools.getStructures(creep.room, STRUCTURE_CONTAINER);
+
+        return _.find(targets, function(target) {
+            return target.energy  < target.energyCapacity &&
+                creep.pos.isNearTo(target);
+        });
     },
 
     /**

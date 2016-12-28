@@ -9,10 +9,20 @@ const targetsOrder = [
     STRUCTURE_CONTAINER,
     STRUCTURE_WALL,
     STRUCTURE_STORAGE,
-    STRUCTURE_LAB,
+    STRUCTURE_LAB
 ];
 
 var roleBuilder = module.exports = {
+
+    levels: [
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 2, move: 1},
+        {work: 2, carry: 2, move: 1},
+        {work: 2, carry: 3, move: 4},
+        {work: 3, carry: 3, move: 4},
+        {work: 4, carry: 3, move: 5},
+        {work: 4, carry: 4, move: 5}
+    ],
 
     /** @param {Creep} creep **/
     run: function(creep) {
@@ -25,7 +35,7 @@ var roleBuilder = module.exports = {
         }
 
         let target = null,
-            targets = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
+            targets = tools.getConstructionSites(creep.room);
 
         // Derp
         if( !targets.length ) {
@@ -63,6 +73,11 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+        // Done or out of energy move on
+        else if( !creep.carry.energy || target.progress >= target.progressTotal ) {
+            return this.run(creep);
+        }
+
     },
 
     /**
@@ -73,8 +88,7 @@ var roleBuilder = module.exports = {
      * @return {boolean}
      */
     spawn: function(spawn) {
-
         // Spawn only if there are construction sites to be worked on
-        return spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0;
+        return tools.getConstructionSites(spawn.room).length > 0;
     }
 };

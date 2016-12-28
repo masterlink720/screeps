@@ -1,6 +1,6 @@
 const repairTargets = [
     STRUCTURE_SPAWN,
-    STRUCTURE_EXTENSION,
+    STRUCTURE_EXTENSION
 ];
 
 const tools = require('./tools');
@@ -14,18 +14,23 @@ var Tower = module.exports = {
             return false;
         }
 
-        let foe = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS),
-            friend = tower.pos.findClosestByRange(tools.getStructures(tower.room),
-                struct => _.includes(repairTargets, struct.structureType) && struct.hits < struct.hitsMax
-            );
+        let foe = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
 
         if( foe ) {
             tower.attack(foe);
+            return;
         }
 
-        // Repair only if the tower has at least half of its energy left
-        else if( friend && tower.energy >= (tower.energyCapacity / 2)  ) {
-            tower.repair(friend);
+        // Try healing if we have at least half energy
+        if( tower.energy >= tower.energyCapacity / 2 ) {
+
+            let friends = tools.getStructures(tower.room, function(struct) {
+                return _.includes(repairTargets, struct.structureType) && struct.hits < struct.hitsMax
+            });
+
+            if( friends.length ) {
+                tower.repair(tower.pos.findClosestByRange(friends) || friends[0]);
+            }
         }
     }
 

@@ -7,11 +7,21 @@ const roles = {
 
 };
 
-const rolesOrder = ['builder', 'repairer', 'harvester', 'waller', 'upgrader'];
+const rolesOrder = ['builder', 'repairer', 'harvester', 'waller', 'upgrader', 'settler', 'upgrader'];
 
 const roleUtil = require('./role.util');
 
 var roleGeneric = module.exports = {
+
+    levels: [
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 1, move: 2},
+        {work: 1, carry: 2, move: 3},
+        {work: 2, carry: 2, move: 2},
+        {work: 3, carry: 2, move: 2},
+        {work: 3, carry: 2, move: 3},
+        {work: 3, carry: 2, move: 4}
+    ],
 
     /** @param {Creep} creep **/
     run: function(creep) {

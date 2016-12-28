@@ -1,4 +1,4 @@
-const roleUtil = require('role.util');
+const roleUtil = require('./role.util');
 
 const targetsOrder = [
     STRUCTURE_SPAWN,
@@ -13,6 +13,16 @@ const targetsOrder = [
 const tools    = require('./tools');
 
 var roleBuilder = module.exports = {
+
+    levels: [
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 1, move: 2},
+        {work: 1, carry: 1, move: 3},
+        {work: 2, carry: 1, move: 3},
+        {work: 2, carry: 2, move: 3},
+        {work: 2, carry: 3, move: 4},
+        {work: 2, carry: 3, move: 5}
+    ],
 
     /** @param {Creep} creep **/
     run: function(creep) {
@@ -74,7 +84,7 @@ var roleBuilder = module.exports = {
         if (!creep.memory.repairTargetId || creep.memory.repairTargetId !== target.id) {
             creep.memory.repairTargetId = target.id;
 
-            console.log('Repairing ' + target);
+            // console.log('Repairing ' + target);
             creep.say('Repairing.' + target.name);
         }
 
@@ -82,6 +92,10 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+        // Done or out of energy, run again
+        else if( !creep.carry.energy || target.hits >= target.hitsMax ) {
+            return this.run(creep);
+        }
     },
 
     /**
@@ -90,7 +104,7 @@ var roleBuilder = module.exports = {
      */
     spawn: function(spawn) {
 
-        return tools.getStructures(spawn.room, (struct) =>
+        return tools.getStructures(spawn.room, struct =>
             struct.structureType === STRUCTURE_ROAD || struct.structureType === STRUCTURE_CONTAINER)
             .length > 0;
     }

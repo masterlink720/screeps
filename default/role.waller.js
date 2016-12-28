@@ -2,7 +2,17 @@ const roleUtil = require('./role.util');
 const tools    = require('./tools');
 
 
-var roleBuilder = module.exports = {
+var roleWaller = module.exports = {
+
+    levels: [
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 2, move: 2},
+        {work: 2, carry: 2, move: 3},
+        {work: 2, carry: 3, move: 3},
+        {work: 2, carry: 3, move: 4},
+        {work: 3, carry: 3, move: 4},
+        {work: 5, carry: 3, move: 4}
+    ],
 
     /** @param {Creep} creep **/
     run: function(creep) {
@@ -52,14 +62,17 @@ var roleBuilder = module.exports = {
             creep.moveTo(target);
         }
 
+        // Done or out of energy
+        else if( !creep.carry.energy || target.hits >= target.hitsMax ) {
+            return this.run(creep)
+        }
+
     },
 
     /**
      * Only spawn if we have walls to build
      */
     spawn: function(spawn) {
-        return spawn.room.find(FIND_STRUCTURES, {
-            filter: struct => struct.structureType === STRUCTURE_WALL
-        }).length > 0;
+        return tools.getStructures(spawn.room, STRUCTURE_WALL).length > 0;
     }
 };
