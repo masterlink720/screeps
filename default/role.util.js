@@ -18,10 +18,10 @@ const roleLevels = {
         [WORK, CARRY, MOVE],
         [WORK, CARRY, CARRY, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE],
-        [WORK, WORK, CARRY, CARRY, CARRY, MOVE],
+        [WORK, WORK, WORK, CARRY, CARRY, MOVE],
         [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE],
         [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE],
-        [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE]
+        [WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE]
     ],
     repairer: [
         [WORK, CARRY, MOVE],
@@ -74,6 +74,13 @@ var roleUtil = module.exports = {
             if( ! creep.memory.sourceId || creep.carry.energy >= creep.carryCapacity ) {
                 creep.memory.sourceId = null;
                 return false;
+            }
+        }
+
+        // Regen if appropriate
+        if( !creep.memory.sourceId ) {
+            if( this.regen(creep) ) {
+                return true;
             }
         }
 
@@ -134,6 +141,90 @@ var roleUtil = module.exports = {
         // If we're done gathering, return false to allow the next task
         else if( creep.carry.energy >= creep.carryCapcity ) {
             creep.memory.sourceId = null;
+            return false;
+        }
+
+        return true;
+    },
+
+    /**
+     * Should be called when the creep is not currently doing anything
+     *
+     * If the creep's TTL is below a certain threshold, send it to the spawn to
+     *  be renewed
+     *
+     * @param {Creep} creep
+     * @param {number} minLevel - creep must be at least this level for us to care
+     * @param {number} [threshold=ticksToLive]
+     *
+     * @return {boolean}
+     *  true: needs to regenerate, stop further actions
+     *  false: no regeneration, continue
+     */
+    regen: function(creep, maxDistance = 6, minLevel = 5, threshold = 50, targetThreshold = 1000) {
+        // TODO disble this
+        return false;
+
+        // Leet the weak die
+        if( creep.memory.level < minLevel || creep.memory.regenDisabled ) {
+            return false;
+        }
+
+        // If above the threshold, continue going if we've already begun
+        if( creep.ticksToLive > threshold && !creep.memory.regenSpawnId ) {
+            return false;
+        }
+
+        let spawns = tools.getStructures(creep.room, function(s) {
+                return s.structureType === STRUCTURE_SPAWN &&
+                    creep.pos.distanceTo(s) <= maxDistance
+            }),
+            spawn;
+
+        // No spawns nearby, just let it die
+        if( !spawns.length ) {
+            creep.memory.regenSpawnId = null;
+            creep.memory.regenDisabled = true;
+            return false;
+        }
+
+        if( creep.memory.regenSpawnId ) {
+            spawn = _.find(spawns, s => s.id === creep.memory.regenSpawnId);
+        }
+
+        spawn = spawn || spawns[0];
+        if( creep.memory.regenSpawnId !== spawn.id ) {
+            creep.memory.regenSpawnId = spawn.id;
+
+            tools.dump('Regenerating', {
+                creep: creep.name,
+                ttl:   creep.ticksToLive,
+                memory: creep.memory.regenSpawnId,
+                spaw_id: spawn.id
+            });
+            creep.say('Regenerating');
+        }
+
+        let ttlBefore = creep.ticksToLive;
+        let res = spawn.renewCreep(creep);
+        if( res === ERR_NOT_IN_RANGE ) {
+            creep.moveTo(spawn, {reusePath: 100});
+        }
+
+        // No energy - permanently flag this creep as inelligible for regen
+        else if( res === ERR_NOT_ENOUGH_ENERGY ) {
+            creep.memory.regenSpawnId = null;
+            creep.memory.regenDisabled = true;
+
+            return false;
+        }
+
+        else if( res === ERR_FULL || creep.ticksToLive >= targetThreshold ) {
+            tools.dump('Regen complete', {
+                creep: creep.name
+            });
+
+            creep.memory.regenSpawnId = null;
             return false;
         }
 

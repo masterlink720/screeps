@@ -82,20 +82,44 @@ var Tools = module.exports = {
         return this._constructionSites[room.id].all;
     },
 
-    getCreeps(room, filter = null, refresh = false) {
-        if( !this._creeps[room.id] || refresh ) {
-            this._creeps[room.id] = room.find(FIND_MY_CREEPS);
+    getCreeps(room, filter = null,  refresh = false) {
+        let roomId = room ? room.id : '_all_';
+
+        if( !this._creeps[roomId] || refresh ) {
+            if( room ) {
+                this._creeps[roomId] = room.find(FIND_MY_CREEPS, {
+                    filter: c => !c.spawning
+                });
+            }
+            else {
+                this._creeps[roomId] = _.find(Game.creeps, c => !c.spawning)
+            }
         }
 
-        if( typeof filter === 'function' ) {
-            return _.filter(this._creeps[room.id], filter);
+        if( typeof filter === 'function' || typeof filter === 'object' ) {
+            return _.filter(this._creeps[roomId], filter);
         }
         // Role name
         if( filter && typeof filter === 'string' ) {
-            return _.filter(this._creeps[room.id], creep => creep.memory.role === filter);
+            return _.filter(this._creeps[roomId], creep => creep.memory.role === filter);
         }
 
-        return this._creeps[room.id];
+        return this._creeps[roomId];
+    },
+
+    /**
+     * Returns the cost of the body components for the given creep
+     */
+    getCreepValue(creep) {
+        return _.sum(creep.body, b => BODYPART_COST[b.type]);
+    },
+
+
+    /**
+     * Returns the cost of the body components for the given creep
+     */
+    getCreepValue(creep) {
+        return _.sum(creep.body, b => BODYPART_COST[b.type]);
     },
 
     getEnergy(room, getSources = true, getStructures = false, refresh = false) {
@@ -176,6 +200,31 @@ var Tools = module.exports = {
         console.log(msg + '\n\n');
     },
 
+    printHtml: function(title, data) {
+        let styles = {
+            width: '800px',
+            background: '#158',
+            margin: '10px 0 10px 100px',
+            'border-radius': '5px',
+            padding: '6px'
+        };
+
+        let css = _.map(styles, function(val, key) {
+            return `${key}: ${val}`
+        }).join(';');
+
+        let out = `<br /><div style="${css}">`;
+        if( title ) {
+            out += '<h3 style="margin-bottom: 5px;">' + title + '</h3><hr style="margin-bottom: 5px" />';
+        }
+
+        // process data
+        out += data;
+
+        out += '</div>';
+        console.log(out);
+    },
+
     /**
      * "Pretty" print a message and optional complex objects
      */
@@ -184,15 +233,29 @@ var Tools = module.exports = {
             return null;
         }
 
-        let out = args.map(function(arg) {
-            if( !arg || typeof arg === 'string' ) {
-                return arg || '';
+        let title;
+        if( typeof args.length[0] === 'string' ) {
+            title = args[0];
+            args = args.slice(1);
+        }
+
+        let data = args.map(function(arg) {
+            if( !arg ) {
+                return '';
             }
 
-            return JSON.stringify(arg, null, 2) + '\n';
-        }).join(' ');
+            let out = '<div>';
+            if( typeof arg == 'string' ) {
+                out += arg;
+            }
+            else {
+                out += '<pre style="background: none, border: none margin: 5px 0;">' + JSON.stringify(arg, null, 2) + '</pre>';
+            }
 
-        console.log(out);
+            return out + '</div>';
+        }).join('');
+
+        this.printHtml(title, data);
     },
 
     claimController: function(id) {

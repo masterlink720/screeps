@@ -37,8 +37,6 @@ var roleBuilder = module.exports = {
         let target = null,
             targets = tools.getStructures(creep.room, struct => struct.hits < struct.hitsMax);
 
-        // console.log(`repair targets: ${targets}`);
-
         // Derp
         if( !targets.length ) {
             creep.memory.repairTargetId = null;

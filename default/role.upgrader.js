@@ -3,13 +3,13 @@ const roleUtil = require('./role.util');
 var roleUpgrader = module.exports = {
 
     levels: [
-        {WORK: 1, CARRY: 1, MOVE: 1},
-        {WORK: 1, CARRY: 2, MOVE: 1},
-        {WORK: 2, CARRY: 2, MOVE: 1},
-        {WORK: 2, CARRY: 3, MOVE: 1},
-        {WORK: 3, CARRY: 3, MOVE: 1},
-        {WORK: 3, CARRY: 3, MOVE: 3},
-        {WORK: 4, CARRY: 3, MOVE: 3}
+        {work: 1, carry: 1, move: 1},
+        {work: 1, carry: 2, move: 1},
+        {work: 2, carry: 2, move: 1},
+        {work: 2, carry: 3, move: 1},
+        {work: 3, carry: 3, move: 1},
+        {work: 3, carry: 3, move: 3},
+        {work: 4, carry: 3, move: 3}
     ],
 
     /** @param {Creep} creep **/
@@ -34,7 +34,6 @@ var roleUpgrader = module.exports = {
         else if( !creep.carry.energy ) {
             return this.run(creep);
         }
-
 	},
 
     /**

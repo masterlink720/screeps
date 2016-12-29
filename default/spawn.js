@@ -17,9 +17,9 @@ const roleUtil  = global.roleUtil = require('./role.util');
 
 const creepThresholds = {
     harvester:  6,
-    builder:    2,
+    builder:    5,
     repairer:   2,
-    waller:     2,
+    waller:     1,
     upgrader:   8,
     settler:    0,
     generic:    0
@@ -52,6 +52,8 @@ function Spawn(spawn) {
     //});
 
     // Spawn creeps - skip if already spawning obviously
+    // Also skip if there are creeps trying to regenerate
+
     if( !spawn.spawning ) {
         let minLevel = 5; // ~~((totalEnergyCapacity - 300) / 100);
         let minSettlerLevel = 0;
@@ -64,9 +66,6 @@ function Spawn(spawn) {
         _.find(['harvester', 'upgrader', 'repairer', 'builder', 'waller', 'generic', 'settler'], function(role) {
             // Skip if we don't need this type of creep or if we've reached the spawn limit
             if( allCreeps[role].length < creepThresholds[role] && roles[role].spawn(spawn) ) {
-                if( role === 'settler' ){
-                    tools.dump('here');
-                }
 
                 let nextId = spawn.memory.nextCreepId || 0,
                     name = role[0].toUpperCase() + role.slice(1) + ' - ' + nextId;
@@ -86,20 +85,11 @@ function Spawn(spawn) {
                     }
                     return newCreep;
                 }
-                else {
-                    tools.dump('spawn fail', {role: role});
-                }
             }
 
             return false;
         });
     }
-
-    /*
-     if( false && incrementCreepConfigIndex && creepConfigIndex < creepConfigs.length ) {
-     creepConfigIndex++;
-     }
-     */
 
     // TODO upgrade creeps
 
@@ -111,6 +101,12 @@ function Spawn(spawn) {
             roles.generic.run(creep);
         }
     });
+
+    /*
+     if( false && incrementCreepConfigIndex && creepConfigIndex < creepConfigs.length ) {
+     creepConfigIndex++;
+     }
+     */
 
     // Towers
     tools.getStructures(spawn.room, STRUCTURE_TOWER).forEach(function(tower) {
