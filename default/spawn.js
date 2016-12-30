@@ -16,11 +16,11 @@ const tools     = global.tools = require('./tools');
 const roleUtil  = global.roleUtil = require('./role.util');
 
 const creepThresholds = {
-    harvester:  6,
-    builder:    5,
+    harvester:  4,
+    builder:    3,
     repairer:   2,
     waller:     1,
-    upgrader:   8,
+    upgrader:   4,
     settler:    0,
     generic:    0
 };
@@ -54,8 +54,8 @@ function Spawn(spawn) {
     // Spawn creeps - skip if already spawning obviously
     // Also skip if there are creeps trying to regenerate
 
-    if( !spawn.spawning ) {
-        let minLevel = 5; // ~~((totalEnergyCapacity - 300) / 100);
+    if( !spawn.spawning && !tools.getCreeps(spawn.room, c=>c.memory.regenSpawnId).length ) {
+        let minLevel = 6; // ~~((totalEnergyCapacity - 300) / 100);
         let minSettlerLevel = 0;
 
         // No Harvesters and no builders - reduce minLevel to 1
@@ -72,15 +72,15 @@ function Spawn(spawn) {
 
                 let newCreep = roleUtil.spawn(spawn, role, name, role === 'settler' ? minSettlerLevel : minLevel);
                 if( newCreep ) {
-                    console.log(`<p><span style="font-weight: 600; color: #069;">Spawning</span></p>`
-                        + `<p style="padding-left: 15px">`
-                        + `<strong>Role: </strong>${role}, <strong>Name: </strong>${newCreep.name}</p>`
-                     );
+                    tools.dump('Spawning Creep', {
+                        role: role,
+                        name: newCreep.name
+                    });
 
                     allCreeps[role].push(newCreep);
 
                     // Reset at 999
-                    if( (spawn.memory.nextCreepId = nextId + 1) >= 9999 ) {
+                    if( (spawn.memory.nextCreepId = nextId + 1) >= 999 ) {
                         spawn.memory.nextCreepId = 0;
                     }
                     return newCreep;

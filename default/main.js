@@ -1,6 +1,16 @@
 /** @var {lodash|_} _ */
 
 
+/**
+ *
+ * @see https://github.com/screepers/screeps-grafana
+ * @see https://github.com/overra/screeps-remote
+ * @see https://github.com/screepers/screeps_console
+ *
+ *
+ *
+ */
+
 
 /** Nodes from Adam
 

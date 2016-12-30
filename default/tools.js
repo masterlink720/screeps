@@ -200,29 +200,25 @@ var Tools = module.exports = {
         console.log(msg + '\n\n');
     },
 
-    printHtml: function(title, data) {
+    printHtml: function(title, content) {
         let styles = {
             width: '800px',
             background: '#158',
-            margin: '10px 0 10px 100px',
-            'border-radius': '5px',
+            margin: '10px 0 10px 80px',
+            'border-radius': '4px',
             padding: '6px'
         };
 
         let css = _.map(styles, function(val, key) {
-            return `${key}: ${val}`
+            return `${key}: ${val}`;
         }).join(';');
 
-        let out = `<br /><div style="${css}">`;
+        let out = '';
         if( title ) {
-            out += '<h3 style="margin-bottom: 5px;">' + title + '</h3><hr style="margin-bottom: 5px" />';
+            out = `<h5 style="margin: 10px; font-weight: 600; color: white;">${title}</h5>`;
         }
 
-        // process data
-        out += data;
-
-        out += '</div>';
-        console.log(out);
+        console.log(`<div style="${css}">${out}${content}</div`);
     },
 
     /**
@@ -234,7 +230,7 @@ var Tools = module.exports = {
         }
 
         let title;
-        if( typeof args.length[0] === 'string' ) {
+        if( typeof args[0] === 'string' ) {
             title = args[0];
             args = args.slice(1);
         }
@@ -244,18 +240,45 @@ var Tools = module.exports = {
                 return '';
             }
 
-            let out = '<div>';
+            let out = '';
             if( typeof arg == 'string' ) {
                 out += arg;
             }
             else {
-                out += '<pre style="background: none, border: none margin: 5px 0;">' + JSON.stringify(arg, null, 2) + '</pre>';
+                out += '<pre style="color: #ddd; background: #235; border: none; margin: 5px; border-radius: 3px;">' +
+                    JSON.stringify(arg, null, 2) + '</pre>';
             }
 
-            return out + '</div>';
+            return '<div>' + out + '</div>';
         }).join('');
 
         this.printHtml(title, data);
+    },
+
+    /**
+     * Recursively "var dump" a value and convert it into formatted html
+     *
+     * @todo build this
+     */
+    _toHtml: function(val, opts = {}, depth = 0) {
+        opts = _.defaults({}, {
+            nullColor: "#555",
+            keyColor:  "#25A",
+            valueColor: "#222",
+            keyWeight:  600
+        });
+
+        let styles = {};
+        let out = [];
+        if( val === null ) {
+            styles.color = opts.nullColor;
+            out = "NULL";
+        }
+
+        else if( typeof val === 'object' ) {
+            _.each(val, function(k, v) {
+            });
+        }
     },
 
     claimController: function(id) {

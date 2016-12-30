@@ -27,7 +27,7 @@ const roleLevels = {
         [WORK, CARRY, MOVE],
         [WORK, CARRY, MOVE, MOVE],
         [WORK, CARRY, MOVE, MOVE, MOVE],
-        [WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
+        [WORK, WORK, CARRY, MOVE, MOVE, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
         [WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE]
@@ -161,9 +161,9 @@ var roleUtil = module.exports = {
      *  true: needs to regenerate, stop further actions
      *  false: no regeneration, continue
      */
-    regen: function(creep, maxDistance = 6, minLevel = 5, threshold = 50, targetThreshold = 1000) {
+    regen: function(creep, minLevel = 5, threshold = 50) {
         // TODO disble this
-        return false;
+        // return false;
 
         // Leet the weak die
         if( creep.memory.level < minLevel || creep.memory.regenDisabled ) {
@@ -176,8 +176,7 @@ var roleUtil = module.exports = {
         }
 
         let spawns = tools.getStructures(creep.room, function(s) {
-                return s.structureType === STRUCTURE_SPAWN &&
-                    creep.pos.distanceTo(s) <= maxDistance
+                return s.structureType === STRUCTURE_SPAWN
             }),
             spawn;
 
@@ -192,7 +191,7 @@ var roleUtil = module.exports = {
             spawn = _.find(spawns, s => s.id === creep.memory.regenSpawnId);
         }
 
-        spawn = spawn || spawns[0];
+        spawn = spawn || creep.pos.findClosestByPath(spawns);
         if( creep.memory.regenSpawnId !== spawn.id ) {
             creep.memory.regenSpawnId = spawn.id;
 
@@ -212,20 +211,22 @@ var roleUtil = module.exports = {
         }
 
         // No energy - permanently flag this creep as inelligible for regen
+        /*
         else if( res === ERR_NOT_ENOUGH_ENERGY ) {
             creep.memory.regenSpawnId = null;
             creep.memory.regenDisabled = true;
 
             return false;
         }
+        */
 
-        else if( res === ERR_FULL || creep.ticksToLive >= targetThreshold ) {
+        else if( res === ERR_FULL ) {
             tools.dump('Regen complete', {
-                creep: creep.name
+                creep: creep.name,
+                ttl: creep.ticksToLive
             });
 
             creep.memory.regenSpawnId = null;
-            return false;
         }
 
         return true;
