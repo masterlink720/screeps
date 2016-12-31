@@ -12,21 +12,11 @@ const tools    = require('./tools');
 
 var roleHarvester = module.exports = {
 
-    levels: [
-        {work: 1, carry: 1, move: 1},
-        {work: 1, carry: 1, move: 2},
-        {work: 1, carry: 2, move: 2},
-        {work: 1, carry: 3, move: 2},
-        {work: 2, carry: 3, move: 2},
-        {work: 2, carry: 3, move: 3},
-        {work: 3, carry: 4, move: 3}
-    ],
-
     /** @param {Creep} creep **/
     run: function(creep) {
 
         // Gathering
-        if (roleUtil.getResources(creep) ) {
+        if (roleUtil.getResources(creep)) {
             // Previous had a dropoff target
             creep.memory.transferTargetId = null;
 
@@ -48,7 +38,7 @@ var roleHarvester = module.exports = {
 
             // Filter out those with full energy
             targets = tools.getStructures(creep.room, function(struct) {
-                if( ! _.includes(targetsOrder, struct.structureType) ) {
+                if (!_.includes(targetsOrder, struct.structureType)) {
                     return false;
                 }
 
@@ -63,16 +53,14 @@ var roleHarvester = module.exports = {
 
         // Already has a transfer target
         if (creep.memory.transferTargetId) {
-            target = _.find(targets, _target => _target.id === creep.memory.transferTargetId);
+            target = _.find(targets, (_target) => _target.id === creep.memory.transferTargetId);
         }
 
         if (!target) {
             // Try finding the closest structure, in order of priority
             _.each(targetsOrder, function(targetType) {
-                if( target ) return;
-
                 target = target || creep.pos.findClosestByPath(
-                    _.filter(targets, _target => _target.structureType === targetType)
+                    _.filter(targets, (_target) => _target.structureType === targetType)
                 );
             });
         }
@@ -91,20 +79,16 @@ var roleHarvester = module.exports = {
         if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
             creep.moveTo(target);
         }
-        else if( !creep.carry.energy ) {
-                return this.run(creep);
-        }
-        else if( target.energy >= target.energyCapacity ||target.store >= target.storeCapacity ) {
+
+        // Start moving immediately to the next target
+        else if (!creep.carry.energy) {
             return this.run(creep);
         }
 
-        // Done transfering - run again
-/*
-        else if(!creep.carry.energy ||
-            (target.energyCapacity && (target.energy >= target.energyCapacity)) ||
-            (target.energyCapacity && (target.store >= target.storeCapacity))) {
+        // Target is full, start the next target immediately
+        else if (target.energy >= target.energyCapacity || target.store >= target.storeCapacity) {
             return this.run(creep);
-        }*/
+        }
     },
 
     /**
@@ -115,7 +99,7 @@ var roleHarvester = module.exports = {
         let targets = tools.getStructures(creep.room, STRUCTURE_CONTAINER);
 
         return _.find(targets, function(target) {
-            return target.energy  < target.energyCapacity &&
+            return target.energy < target.energyCapacity &&
                 creep.pos.isNearTo(target);
         });
     },

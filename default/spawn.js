@@ -55,7 +55,7 @@ function Spawn(spawn) {
     // Also skip if there are creeps trying to regenerate
 
     if( !spawn.spawning && !tools.getCreeps(spawn.room, c=>c.memory.regenSpawnId).length ) {
-        let minLevel = 6; // ~~((totalEnergyCapacity - 300) / 100);
+        let minLevel = 3; // ~~((totalEnergyCapacity - 300) / 100);
         let minSettlerLevel = 0;
 
         // No Harvesters and no builders - reduce minLevel to 1
