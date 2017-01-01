@@ -129,7 +129,7 @@ var roleUtil = module.exports = {
             source = (closestTo || creep).pos.findClosestByPath(sources);
 
             // If full, try finding one with fewer creeps
-            if( this.resourceCreeps(source) >= 3 ) {
+            if( source && this.resourceCreeps(source) >= 3 ) {
                 let nextSource = _.sortBy(sources, s => this.resourceCreeps(s))[0];
                 if( this.resourceCreeps(nextSource) < 5 ) {
                     source = nextSource;
