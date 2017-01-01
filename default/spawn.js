@@ -19,7 +19,7 @@ const roleUtil = global.roleUtil = require('./role.util');
 const creepThresholds = {
     harvester:  5,
     miner:      2,
-    builder:    5,
+    builder:    4,
     repairer:   3,
     waller:     1,
     upgrader:   5,

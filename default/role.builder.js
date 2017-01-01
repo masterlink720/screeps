@@ -88,7 +88,7 @@ var roleBuilder = module.exports = {
      * @return {boolean}
      */
     spawn: function(spawn) {
-        // Spawn only if there are construction sites to be worked on
-        return tools.getConstructionSites(spawn.room).length > 0;
+        // Spawn builders up to the limit of builders, or at least one per site
+        return tools.getConstructionSites(spawn.room).length > tools.getCreeps(spawn.room, 'builder').length;
     }
 };
