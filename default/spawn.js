@@ -2,14 +2,15 @@
 
 
 const roles = {
-    harvester: require('./role.harvester'),
-    upgrader: require('./role.upgrader'),
-    builder: require('./role.builder'),
-    repairer: require('./role.repairer'),
-    waller: require('./role.waller'),
-    generic: require('./role.generic'),
-    settler: require('./role.settler'),
-    tower: require('./tower')
+    harvester:  require('./role.harvester'),
+    miner:      require('./role.miner'),
+    upgrader:   require('./role.upgrader'),
+    builder:    require('./role.builder'),
+    repairer:   require('./role.repairer'),
+    waller:     require('./role.waller'),
+    generic:    require('./role.generic'),
+    settler:    require('./role.settler'),
+    tower:      require('./tower')
 };
 
 const tools = global.tools = require('./tools');
@@ -17,6 +18,7 @@ const roleUtil = global.roleUtil = require('./role.util');
 
 const creepThresholds = {
     harvester:  5,
+    miner:      2,
     builder:    5,
     repairer:   3,
     waller:     1,
@@ -36,6 +38,7 @@ let Spawn = module.exports =  {
 
         let allCreeps = {
             harvester:  tools.getCreeps(spawn.room, 'harvester'),
+            miner:      tools.getCreeps(spawn.room, 'miner'),
             builder:    tools.getCreeps(spawn.room, 'builder'),
             upgrader:   tools.getCreeps(spawn.room, 'upgrader'),
             repairer:   tools.getCreeps(spawn.room, 'repairer'),
@@ -65,7 +68,7 @@ let Spawn = module.exports =  {
                 minLevel = 1;
             }
 
-            _.find(['harvester', 'upgrader', 'repairer', 'builder', 'waller', 'generic', 'settler'], function(role) {
+            _.find(['harvester', 'upgrader', 'repairer', 'builder', 'waller', 'miner', 'settler', 'generic'], function(role) {
                 // Skip if we don't need this type of creep or if we've reached the spawn limit
                 if (allCreeps[role].length < creepThresholds[role] && roles[role].spawn(spawn)) {
 

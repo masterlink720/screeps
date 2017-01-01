@@ -73,6 +73,9 @@ var roleWaller = module.exports = {
      * Only spawn if we have walls to build
      */
     spawn: function(spawn) {
-        return tools.getStructures(spawn.room, STRUCTURE_WALL).length > 0;
+        return tools.getStructures(spawn.room, s => (
+            s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART)
+            && s.hits < s.hitsMax)
+        .length > 0;
     }
 };

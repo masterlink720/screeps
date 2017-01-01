@@ -51,7 +51,7 @@ var roleRepairer = module.exports = {
         }
 
         if( creep.memory.repairerTargetId ) {
-            target = _.find(targets, (_target) => _target.id === creep.memory.repairerTargetId);
+            target = _.find(targets, _target => _target.id === creep.memory.repairerTargetId);
 
             // done building - move on
             if ( !target ) {
