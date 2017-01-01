@@ -19,7 +19,7 @@ var roleWaller = module.exports = {
 
         // Gathering
         if( roleUtil.getResources(creep) ) {
-            creep.memory.wallTargetId = null;
+            creep.memory.wallerTargetId = null;
 
             return;
         }
@@ -31,19 +31,19 @@ var roleWaller = module.exports = {
 
         // Derp
         if( !targets.length ) {
-            creep.memory.wallTargetId = null;
+            creep.memory.wallerTargetId = null;
             return false;
         }
 
         // Sort by hits
         targets = _.sortBy(targets, 'hits')
 
-        if( creep.memory.wallTargetId ) {
-            target = _.find(targets, (_target) => _target.id === creep.memory.wallTargetId);
+        if( creep.memory.wallerTargetId ) {
+            target = _.find(targets, (_target) => _target.id === creep.memory.wallerTargetId);
 
             // done building - move on
             if ( !target ) {
-                creep.memory.wallTargetId = null;
+                creep.memory.wallerTargetId = null;
             }
         }
 
@@ -51,8 +51,8 @@ var roleWaller = module.exports = {
         target = target || targets[0];
 
         // New target
-        if (!creep.memory.wallTargetId || creep.memory.wallTargetId !== target.id) {
-            creep.memory.wallTargetId = target.id;
+        if (!creep.memory.wallerTargetId || creep.memory.wallerTargetId !== target.id) {
+            creep.memory.wallerTargetId = target.id;
 
             console.log('Walling ' + target);
             creep.say('Walling.' + target);

@@ -18,7 +18,7 @@ var roleHarvester = module.exports = {
         // Gathering
         if (roleUtil.getResources(creep)) {
             // Previous had a dropoff target
-            creep.memory.transferTargetId = null;
+            creep.memory.harvesterTargetId = null;
 
             // If we can, despoit energy directly into nearby container
             // TODO conditionally allow this, but don't allow it to prevent
@@ -42,18 +42,23 @@ var roleHarvester = module.exports = {
                     return false;
                 }
 
+                // Storage object
+                if( typeof struct.store === 'object' ) {
+                    return struct.store.energy < struct.storeCapacity;
+                }
+
                 return struct.store < struct.storeCapacity || struct.energy < struct.energyCapacity;
             });
 
         // Fail
         if( !targets.length ) {
-            creep.memory.transferTargetId = null;
+            creep.memory.harvesterTargetId = null;
             return false;
-        }
+       }
 
         // Already has a transfer target
-        if (creep.memory.transferTargetId) {
-            target = _.find(targets, (_target) => _target.id === creep.memory.transferTargetId);
+        if (creep.memory.harvesterTargetId) {
+            target = _.find(targets, (_target) => _target.id === creep.memory.harvesterTargetId);
         }
 
         if (!target) {
@@ -69,8 +74,8 @@ var roleHarvester = module.exports = {
         target = target || creep.pos.findClosestByPath(targets) || targets[0];
 
         // New target
-        if (!creep.memory.transferTargetId || creep.memory.transferTargetId !== target.id) {
-            creep.memory.transferTargetId = target.id;
+        if (!creep.memory.harvesterTargetId || creep.memory.harvesterTargetId !== target.id) {
+            creep.memory.harvesterTargetId = target.id;
 
             console.log('Depositing energy to ' + target);
             creep.say('Transfer.' + target);

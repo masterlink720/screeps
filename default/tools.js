@@ -4,6 +4,7 @@ var Tools = module.exports = {
     _creeps: {},
     _constructionSites: {},
     _energy: {},
+    _minerals: {},
 
     cleanThrottle: 10,
     cleanStatus: 0,
@@ -26,7 +27,32 @@ var Tools = module.exports = {
         }
     },
 
+    testerage: function() {
+        let spawn = Game.spawns.s1,
+            repairStructs = this.getStructures(spawn.room, t => t.structureType === STRUCTURE_ROAD && t.hits < t.hitsMax)
+                .slice(0, 10);
+
+        let util = require('./role.util');
+
+        let byRepairers = _.map(
+                _.sortBy(repairStructs, t => util.targetCreeps(t, 'repairer')),
+                function(t) { return {id: t.id, hits: t.hits} }
+            ),
+            byAll      = _.map(
+                _.sortBy(repairStructs, t => util.targetCreeps(t, 'repairer'), 'hits'),
+                function(t) { return {id: t.id, hits: t.hits} }
+            );
+
+        this.dump('testerage', {
+            byRepairers: byRepairers,
+            byAll: byAll
+        });
+
+    },
+
     getStructures(room, filter = null, refresh = false) {
+        room = this.getRoom(room);
+
         if( !this._structs[room.id] || refresh ) {
             let structs = this._structs[room.id] = {
                 all: room.find(FIND_STRUCTURES)
@@ -108,12 +134,28 @@ var Tools = module.exports = {
     },
 
     /**
-     * Returns the cost of the body components for the given creep
+     * Update local memory of a creep
+     *
+     * @param creep
      */
-    getCreepValue(creep) {
-        return _.sum(creep.body, b => BODYPART_COST[b.type]);
+    updateCreep(creep) {
+        if( this._creeps[creep.room.id] ) {
+            this._creeps[creep.room.id] = _.map(this._creeps[creep.room.id], function(c) {
+                if( c.id === creep.id ) {
+                    return creep;
+                }
+                return c;
+            });
+        }
+        if( this._creeps['_all_'] ) {
+            this._creeps._all_ = _.map(this._creeps._all_, function(c) {
+                if( c.id === creep.id ) {
+                    return creep;
+                }
+                return c;
+            });
+        }
     },
-
 
     /**
      * Returns the cost of the body components for the given creep
@@ -122,9 +164,37 @@ var Tools = module.exports = {
         return _.sum(creep.body, b => BODYPART_COST[b.type]);
     },
 
+
+    /**
+     * Returns a list of sources from which to gather energy
+     *
+     * @param room
+     * @param getSources
+     * @param getStructures
+     * @param refresh
+     * @returns {Array}
+     */
     getEnergy(room, getSources = true, getStructures = false, refresh = false) {
+        /*
+        room = this.getRoom(room);
+
+        if( !Memory.roomSources ) {
+            Memory.roomSources = {};
+        }
+        if( !Memory.roomSources[room.name] ) {
+            Memory.roomSources[room.name] = room.find(FIND_SOURCES)
+        }
+
         if( !this._energy[room.id] || refresh ) {
-            this._energy[room.id] = room.find(FIND_SOURCES);
+            this._energy[room.id] = Memory.roomSources[room.name]; // room.find(FIND_SOURCES);
+                // .concat(room.find(FIND_DROPPED_RESOURCES));
+        }
+        */
+
+        if( !this._energy[room.id] || refresh ) {
+            this._energy[room.id] = room.find(FIND_DROPPED_ENERGY).concat(
+                room.find(FIND_SOURCES)
+            );
         }
 
         let sources = [];
@@ -170,7 +240,16 @@ var Tools = module.exports = {
         });
     },
 
-    getRooom: function() {
+    getRoom: function(struct) {
+        if( struct ) {
+            if (struct instanceof Room) {
+                return struct;
+            }
+            if (typeof struct === 'object' && struct.room) {
+                return struct.room;
+            }
+        }
+
         return Game.rooms[Object.keys(Game.rooms)[0]];
     },
 
@@ -218,7 +297,7 @@ var Tools = module.exports = {
             out = `<h5 style="margin: 10px; font-weight: 600; color: white;">${title}</h5>`;
         }
 
-        console.log(`<div style="${css}">${out}${content}</div`);
+        console.log(`<div style="${css}">${out}${content}</div>`);
     },
 
     /**

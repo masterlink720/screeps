@@ -29,7 +29,7 @@ var roleBuilder = module.exports = {
 
         // Gathering
         if( roleUtil.getResources(creep) ) {
-            creep.memory.buildTargetId = null;
+            creep.memory.builderTargetId = null;
 
             return;
         }
@@ -39,16 +39,16 @@ var roleBuilder = module.exports = {
 
         // Derp
         if( !targets.length ) {
-            creep.memory.buildTargetId = null;
+            creep.memory.builderTargetId = null;
             return false;
         }
 
-        if( creep.memory.buildTargetId ) {
-            target = _.find(targets, (_target) => _target.id === creep.memory.buildTargetId);
+        if( creep.memory.builderTargetId ) {
+            target = _.find(targets, (_target) => _target.id === creep.memory.builderTargetId);
 
             // done building - move on
             if ( !target ) {
-                creep.memory.buildTargetId = null;
+                creep.memory.builderTargetId = null;
             }
         }
 
@@ -62,8 +62,8 @@ var roleBuilder = module.exports = {
         target = target || targets[0];
 
         // New target
-        if (!creep.memory.buildTargetId || creep.memory.buildTargetId !== target.id) {
-            creep.memory.buildTargetId = target.id;
+        if (!creep.memory.builderTargetId || creep.memory.builderTargetId !== target.id) {
+            creep.memory.builderTargetId = target.id;
 
             console.log('Building ' + target);
             creep.say('Building.' + target.name);

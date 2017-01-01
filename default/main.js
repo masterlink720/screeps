@@ -6,6 +6,7 @@
  * @see https://github.com/screepers/screeps-grafana
  * @see https://github.com/overra/screeps-remote
  * @see https://github.com/screepers/screeps_console
+ * @see https://www.npmjs.com/package/screeps-profiler
  *
  *
  *
@@ -54,17 +55,17 @@ But it's the way that's the most suitable for being optimized for as little CPU 
 
 
 
-const tools     = global.tools = require('./tools');
-const Spawn = require('./spawn');
+const tools         = global.tools      = require('./tools');
+const roleUtil      = global.roleUtil   = require('./role.util');
+const Spawn         = require('./spawn');
 
 module.exports.loop = function() {
     tools.cleanup();
     tools.reset();
 
-    _.each(Game.spawns, function(spawn) {
-        Spawn(spawn);
+    _.each(Game.spawns, function (spawn) {
+        Spawn.run(spawn);
     });
-
 };
 
 

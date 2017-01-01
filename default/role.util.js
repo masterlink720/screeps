@@ -7,7 +7,7 @@ const tools = require('./tools');
 const roleLevels = {
     generic: [
         [WORK, CARRY, MOVE],
-        [WORK, CARRY, CARRY, MOVE],
+        [WORK, CARRY, MOVE, MOVE],
         [WORK, CARRY, CARRY, MOVE, MOVE],
         [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
         [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
@@ -28,9 +28,9 @@ const roleLevels = {
         [WORK, CARRY, MOVE, MOVE],
         [WORK, CARRY, MOVE, MOVE, MOVE],
         [WORK, WORK, CARRY, MOVE, MOVE, MOVE],
-        [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
-        [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
-        [WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE]
+        [WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE],
+        [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE],
+        [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE],
     ],
     settler: [
         [CLAIM, MOVE],
@@ -39,6 +39,19 @@ const roleLevels = {
 };
 
 var roleUtil = module.exports = {
+
+    targetCreeps: function(target, role) {
+        let total = 0,
+            prop = `${role}TargetId`;
+
+        _.each(tools.getCreeps(target.room), function(creep) {
+            if( creep.memory[prop] && creep.memory[prop] === target.id ) {
+                total++;
+            }
+        });
+
+        return total;
+    },
 
     /**
      * Returns the number of creeps currently mining a resource
@@ -56,6 +69,7 @@ var roleUtil = module.exports = {
 
         return total;
     },
+
 
     /**
      * Gather resources if necessary
@@ -132,6 +146,11 @@ var roleUtil = module.exports = {
         }
         else {
             harvestResult = creep.harvest(source)
+
+            // Try picking it up
+            if( harvestResult === ERR_INVALID_TARGET ) {
+                harvestResult = creep.pickup(source);
+            }
         }
 
         if( harvestResult === ERR_NOT_IN_RANGE || harvestResult === ERR_NOT_ENOUGH_RESOURCES ) {
@@ -148,42 +167,82 @@ var roleUtil = module.exports = {
     },
 
     /**
+     * Calculates the cost to regenerate a creep
+     *
+     * @param creep
+     */
+    creepRegenCost: function(creep) {
+
+        let ttlDiff         = creep.memory.ttlCapacity - creep.ticksToLive,
+            ticksRequired   = Math.ceil(ttlDiff / creep.memory.renewPerTick);
+
+        return creep.memory.renewPerTick * ticksRequired;
+
+    },
+
+    /**
      * Should be called when the creep is not currently doing anything
      *
      * If the creep's TTL is below a certain threshold, send it to the spawn to
      *  be renewed
      *
      * @param {Creep} creep
-     * @param {number} minLevel - creep must be at least this level for us to care
      * @param {number} [threshold=ticksToLive]
      *
      * @return {boolean}
      *  true: needs to regenerate, stop further actions
      *  false: no regeneration, continue
      */
-    regen: function(creep, minLevel = 5, threshold = 50) {
-        // TODO disble this
-        // return false;
+    regen: function(creep, threshold = 50) {
+        // TODO conditionally enable this if the cost to regenerate is less than it would be to spawn
+         // return false;
 
-        // Leet the weak die
-        if( creep.memory.level < minLevel || creep.memory.regenDisabled ) {
-            return false;
-        }
-
-        // If above the threshold, continue going if we've already begun
+        // Above minimum - don't regen unless we've already started
         if( creep.ticksToLive > threshold && !creep.memory.regenSpawnId ) {
             return false;
         }
 
-        let spawns = tools.getStructures(creep.room, function(s) {
-                return s.structureType === STRUCTURE_SPAWN
-            }),
+        // Let it die
+        if( creep.memory.regenDisabled ) {
+            return false;
+        }
+
+        // Calculate the cost - unless we've already begun regenerating (aka we're in range)
+        if( !creep.memory.regenStarted ) {
+            if( this.creepRegenCost(creep) > creep.memory.spawnCost ) {
+                /*
+                tools.dump('Regen too costly', {
+                    name: creep.name,
+                    regenCost: this.creepRegenCost(creep),
+                    spawnCost: creep.memory.spawnCost
+                });
+                */
+
+                creep.memory.regenDisabled = true;
+                creep.memory.regenSpawnId = null;
+
+                return true;
+            }
+            /*
+            else {
+                tools.dump('Regen affordable', {
+                    name: creep.name,
+                    regenCost: this.creepRegenCost(creep),
+                    spawnCost: creep.memory.spawnCost
+                });
+            }
+            */
+        }
+
+
+        let spawns = tools.getStructures(creep.room, STRUCTURE_SPAWN),
             spawn;
 
         // No spawns nearby, just let it die
         if( !spawns.length ) {
             creep.memory.regenSpawnId = null;
             creep.memory.regenDisabled = true;
+            creep.memory.regenStarted = false;
             return false;
         }
 
@@ -199,12 +258,14 @@ var roleUtil = module.exports = {
                 creep: creep.name,
                 ttl:   creep.ticksToLive,
                 memory: creep.memory.regenSpawnId,
-                spaw_id: spawn.id
+                regenCost: this.creepRegenCost(creep),
+                spawnCost: creep.memory.spawnCost,
+                span: spawn.id
             });
             creep.say('Regenerating');
         }
 
-        let ttlBefore = creep.ticksToLive;
+        // let ttlBefore = creep.ticksToLive;
         let res = spawn.renewCreep(creep);
         if( res === ERR_NOT_IN_RANGE ) {
             creep.moveTo(spawn, {reusePath: 100});
@@ -226,7 +287,14 @@ var roleUtil = module.exports = {
                 ttl: creep.ticksToLive
             });
 
+            creep.memory.regenStarted = false;
             creep.memory.regenSpawnId = null;
+
+            return false;
+        }
+
+        else if( res == OK ) {
+            creep.memory.regenStarted = true;
         }
 
         return true;
@@ -268,7 +336,19 @@ var roleUtil = module.exports = {
 
         for(let level = confs.length - 1; level >= minLevel; level--) {
             if( spawn.canCreateCreep(confs[level]) === 0 ) {
-                let newName = spawn.createCreep(confs[level], name, {role: role, level: level});
+                let newName     = spawn.createCreep(confs[level], name, {role: role, level: level}),
+                    newCreep    = Game.creeps[newName];
+
+                // Save some meta data
+                newCreep.memory.spawnCost           = 0;
+                newCreep.memory.ttlCapacity         = newCreep.ticksToLive;
+                newCreep.memory.renewPerTick        = ~~(600 / newCreep.body.length);
+                newCreep.memory.renewCostPerTick    = Math.ceil(600 / 2.5 / newCreep.body.length);
+
+                _.each(confs[level], function(part) {
+                    newCreep.memory.spawnCost += BODYPART_COST[part]
+                });
+
                 return Game.creeps[newName];
             }
         }
