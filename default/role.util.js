@@ -124,12 +124,25 @@ var roleUtil = module.exports = {
         }
 
         if( !source ) {
+
+            // 'closest to' specified
+            source = (closestTo || creep).pos.findClosestByPath(sources);
+
+            // If full, try finding one with fewer creeps
+            if( this.resourceCreeps(source) >= 3 ) {
+                let nextSource = _.sortBy(sources, s => this.resourceCreeps(s))[0];
+                if( this.resourceCreeps(nextSource) < 5 ) {
+                    source = nextSource;
+                }
+            }
+
+            /*
             // try finding the closest - unless if 5 or more are using or waiting
             source = (closestTo || creep).pos.findClosestByPath(sources);
             if( !source || this.resourceCreeps(source) > 4 ) {
                 // Sort by creep count
                 source = _.sortBy(sources, _source => this.resourceCreeps(_source))[0];
-            }
+            }*/
         }
 
         if( !creep.memory.sourceId || creep.memory.sourceId !== source.id ) {

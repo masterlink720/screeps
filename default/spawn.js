@@ -22,7 +22,7 @@ const creepThresholds = {
     builder:    5,
     repairer:   3,
     waller:     1,
-    upgrader:   6,
+    upgrader:   5,
     settler:    0,
     generic:    0
 };
