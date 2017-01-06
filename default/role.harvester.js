@@ -43,12 +43,14 @@ var roleHarvester = module.exports = {
                 }
 
                 // Storage object
-                if( typeof struct.store === 'object' ) {
+                if( struct.store && typeof struct.store === 'object' ) {
                     return struct.store.energy < struct.storeCapacity;
                 }
 
                 return struct.store < struct.storeCapacity || struct.energy < struct.energyCapacity;
             });
+
+            // tools.dump('harvester targets', targets);
 
         // Fail
         if( !targets.length ) {

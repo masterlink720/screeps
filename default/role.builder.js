@@ -3,13 +3,15 @@ const tools    = require('./tools');
 
 const targetsOrder = [
     STRUCTURE_TOWER,
+    STRUCTURE_SPAWN,
     STRUCTURE_EXTENSION,
     STRUCTURE_RAMPART,
     STRUCTURE_ROAD,
     STRUCTURE_CONTAINER,
     STRUCTURE_WALL,
+    STRUCTURE_LINK,
     STRUCTURE_STORAGE,
-    STRUCTURE_LAB
+    STRUCTURE_LAB,
 ];
 
 var roleBuilder = module.exports = {

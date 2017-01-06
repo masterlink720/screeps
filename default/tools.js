@@ -27,29 +27,6 @@ var Tools = module.exports = {
         }
     },
 
-    testerage: function() {
-        let spawn = Game.spawns.s1,
-            repairStructs = this.getStructures(spawn.room, t => t.structureType === STRUCTURE_ROAD && t.hits < t.hitsMax)
-                .slice(0, 10);
-
-        let util = require('./role.util');
-
-        let byRepairers = _.map(
-                _.sortBy(repairStructs, t => util.targetCreeps(t, 'repairer')),
-                function(t) { return {id: t.id, hits: t.hits} }
-            ),
-            byAll      = _.map(
-                _.sortBy(repairStructs, t => util.targetCreeps(t, 'repairer'), 'hits'),
-                function(t) { return {id: t.id, hits: t.hits} }
-            );
-
-        this.dump('testerage', {
-            byRepairers: byRepairers,
-            byAll: byAll
-        });
-
-    },
-
     getStructures(room, filter = null, refresh = false) {
         room = this.getRoom(room);
 

@@ -17,12 +17,12 @@ const tools = global.tools = require('./tools');
 const roleUtil = global.roleUtil = require('./role.util');
 
 const creepThresholds = {
-    harvester:  5,
+    harvester:  6,
     miner:      2,
     builder:    4,
-    repairer:   3,
+    repairer:   5,
     waller:     1,
-    upgrader:   5,
+    upgrader:   8,
     settler:    0,
     generic:    0
 };
@@ -35,6 +35,7 @@ const creepThresholds = {
 let Spawn = module.exports =  {
     /** @param {StructureSpawn} spawn */
     run: function(spawn) {
+        if( spawn.name !== 's1' ) return;
 
         let allCreeps = {
             harvester:  tools.getCreeps(spawn.room, 'harvester'),
@@ -60,7 +61,7 @@ let Spawn = module.exports =  {
         // Also skip if there are creeps trying to regenerate
 
         if (!spawn.spawning && !tools.getCreeps(spawn.room, c => c.memory.regenSpawnId).length) {
-            let minLevel = 5; // ~~((totalEnergyCapacity - 300) / 100);
+            let minLevel = 4; // ~~((totalEnergyCapacity - 300) / 100);
             let minSettlerLevel = 0;
 
             // No Harvesters and no builders - reduce minLevel to 1

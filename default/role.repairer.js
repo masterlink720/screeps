@@ -1,4 +1,3 @@
-const roleUtil = require('./role.util');
 
 const targetsOrder = [
     STRUCTURE_SPAWN,
@@ -10,10 +9,10 @@ const targetsOrder = [
     // STRUCTURE_WALL,
 ];
 
+const roleUtil = require('./role.util');
 const tools    = require('./tools');
 
 var roleRepairer = module.exports = {
-
     levels: [
         {work: 1, carry: 1, move: 1},
         {work: 1, carry: 1, move: 2},
@@ -37,7 +36,6 @@ var roleRepairer = module.exports = {
         let target       = null,
             targets      = tools.getStructures(creep.room, struct => struct.hits < struct.hitsMax);
 
-
         // Derp
         if( !targets.length ) {
             creep.memory.repairerTargetId = null;
@@ -50,7 +48,8 @@ var roleRepairer = module.exports = {
             creep.memory.repairerTargetId = target.id;
         }
 
-        if( creep.memory.repairerTargetId ) {
+        else if( creep.memory.repairerTargetId ) {
+            // tools.dump('Repairing from target', {creep_id: creep.name, target_id: creep.memory.repairerTargetId});
             target = _.find(targets, _target => _target.id === creep.memory.repairerTargetId);
 
             // done building - move on
@@ -60,10 +59,9 @@ var roleRepairer = module.exports = {
         }
 
         if (!target) {
-            _.first(targetsOrder, function(targetType) {
-                if( target ) {
-                    return true;
-                }
+
+            _.find(targetsOrder, function(targetType) {
+                if( target ) return true;
 
                 let typeTargets = _.filter(targets, {structureType: targetType});
 
@@ -72,14 +70,10 @@ var roleRepairer = module.exports = {
                     return false;
                 }
 
-                // Sort by the number of creeps currently repairing this, then by number of hits
-                tools.dump('by repairers', _.map(typeTargets, function(t) {
-                    return {repairers: roleUtil.targetCreeps(t, 'repairer'), name: t.name, id: t.id};
-                }));
-
-                target = _.sortBy(typeTargets, t => roleUtil.targetCreeps(t, 'repairer'), 'hits')[0];
-
-                return true;
+                // First sort by hits needed to repair, then by how many creeps are targeting it
+                // Sort by the number of creeps currently repairing this, then by number of hit
+                return target = _.sortBy(_.sortBy(typeTargets, t => t.hitsMax - t.hits),
+                    t => roleUtil.targetCreeps(t, 'repairer'), 'hits')[0];
 
                 /*
                 let creepCounts = _.map(typeTargets, t => roleUtil.targetCreeps(t, 'repairer'));
@@ -119,19 +113,29 @@ var roleRepairer = module.exports = {
         target = target || targets[0];
 
         // New target
-        if (!creep.memory.repairerTargetId || creep.memory.repairerTargetId !== target.id) {
-            creep.memory.repairerTargetId = target.id;
+        if (creep.memory.repairerTargetId !== target.id) {
+            creep.memory.repairerTargetId = this.lastTargetId = target.id;
 
-            // console.log('Repairing ' + target);
+            console.log('Repairing ' + target);
             creep.say('Repairing.' + target.name);
         }
 
-        if (creep.repair(target) === ERR_NOT_IN_RANGE) {
+        let res = creep.repair(target);
+        if (res === ERR_NOT_IN_RANGE) {
             creep.moveTo(target);
+        }
+
+        // Out of energy
+        else if(res === ERR_NOT_ENOUGH_RESOURCES) {
+            creep.memory.repairerTargetId = null;
+
+            return this.run(creep);
         }
 
         // Done or out of energy, run again
         else if( !creep.carry.energy || target.hits >= target.hitsMax ) {
+            creep.memory.repairerTargetId = null;
+
             return this.run(creep);
         }
     },
